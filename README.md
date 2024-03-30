@@ -102,3 +102,8 @@ To  stop running Container
 ```
 docker stop <container_id>
 ```
+
+```
+python3 setup.py install
+```
+
