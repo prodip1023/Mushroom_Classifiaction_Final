@@ -37,6 +37,11 @@ Create reqiremnts.txt file on `Project Directory`
 pip install -r requirements.txt
 ```
 
+OR 
+```
+bash init_setup.sh
+```
+
 Add git file
 ```
 git add <file_name>
