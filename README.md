@@ -111,4 +111,11 @@ docker stop <container_id>
 ```
 python3 setup.py install
 ```
-
+Install ipykernel
+```
+pip install ipykernel
+```
+Read the yaml file using PyYAML 
+```
+pip install PyYAML
+```
