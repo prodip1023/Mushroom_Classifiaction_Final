@@ -2,7 +2,16 @@ from mushroom.entity.config_entity import DataIngestionConfig
 from mushroom.exception import MushroomException
 from mushroom.logger import logging
 #from mushroom.utils.main_utils import read_yaml_file
+from mushroom.entity.artifact_entity import DataIngestionArtifact
+from mushroom.config.configuration import Configuration 
 import sys,os
+# import xtarfile as tarfile
+import tarfile
+import urllib
+from urllib.request import urlopen
+import shutil
+from shutil import copyfileobj
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -14,18 +23,106 @@ class DataIngestion:
         except Exception as e:
             raise MushroomException(e,sys) from e
 
-    def initiate_data_ingestion(self)->DataIngestionArtifact:
+    def download_mushroom_data(self) -> str:
         try:
-            pass
-            # df = pd.read_csv(self.data_ingestion_config.dataset_download_url)
-            # logging.info("Read the dataset as dataframe")
+            # extraction remote url
+            download_url = self.data_ingestion_config.dataset_download_url
 
-            # os.makedirs(os.path.dirname(self.data_ingestion_config.ingested_train_dir),exist_ok=True)
-            # df.to_csv(self.data_ingestion_config.ingested_train_dir,index=False,header=True)
+            # folder location to download
+            tgz_download_dir = self.data_ingestion_config.tgz_download_dir
+            
+            if os.path.exists(tgz_download_dir):
+                os.remove(tgz_download_dir)
 
-            # logging.info("Ingestion of the data is completed")
+            os.makedirs(tgz_download_dir,exist_ok=True)
 
-            # return self.data_ingestion_config
+            # filename
+            mushroom_file_name = os.path.basename(download_url)
+
+            tgz_file_path = os.path.join(tgz_download_dir,mushroom_file_name)
+
+            logging.info(f"Downloaded file from :[{download_url}] into : [{tgz_file_path}]")
+
+
+            # download file
+            #urllib.request.urlretrieve(download_url,tgz_file_path)
+
+            with urlopen(download_url) as in_stream, open(tgz_file_path, 'wb') as out_file:
+                copyfileobj(in_stream,out_file)
+
+            logging.info(f"File :[{tgz_file_path}] has been downloaded successfully.")
+
+            return tgz_file_path
+        except Exception as e:
+            raise MushroomException(e,sys) from e
+    def extract_tgz_file(self,archives,tgz_file_path:str):
+        try:
+            raw_data_dir = self.data_ingestion_config.raw_data_dir
+            if os.path.exists(raw_data_dir):
+                os.remove(raw_data_dir)
+
+            os.makedirs(raw_data_dir,exist_ok=True)
+            
+
+            logging.info(f"Extracting tgz file:[{tgz_file_path}] into dir:[{raw_data_dir}]")
+            # with tarfile.open(tgz_file_path,"r:gz") as mushroom_tgz_file_obj:
+            #     mushroom_tgz_file_obj.extractall(path=raw_data_dir)
+            for tgz_file_path in archives:
+                shutil.unpack_archive(tgz_file_path, raw_data_dir)
+
+            logging.info(f"Extraction completed")
 
         except Exception as e:
             raise MushroomException(e,sys) from e
+
+    def split_data_as_train_test(self) -> DataIngestionArtifact:
+        try:
+            raw_data_dir = self.data_ingestion_config.raw_data_dir
+            file_name = os.listdir(raw_data_dir)[0]
+            mushroom_file_path = os.path.join(raw_data_dir,file_name)
+
+            logging.info(f"Reading csv file: [{mushroom_file_path}]")
+            mushroom_data_frame = pd.read_csv(mushroom_file_path)
+
+            mushroom_data_frame["class"] = mushroom_data_frame["class"].map({'p': 0, 'e': 1})
+            
+            logging.info(f"Train test split initiated")
+            train_set,test_set = train_test_split(mushroom_data_frame,test_size=0.2,random_state=42)
+
+            train_file_path = os.path.join(self.data_ingestion_config.ingested_train_dir,
+            file_name)
+            test_file_path = os.path.join(self.data_ingestion_config.ingested_test_dir,
+            file_name)
+
+            if train_set is not None:
+                os.makedirs(self.data_ingestion_config.ingested_train_dir,exist_ok=True)
+                logging.info(f"Exporting train array into file: [{train_file_path}]")
+                train_set.to_csv(train_file_path,index=False)
+            
+            if test_set is not None:
+                os.makedirs(self.data_ingestion_config.ingested_test_dir,exist_ok=True)
+                logging.info(f"Exporting test array into file: [{test_file_path}]")
+                test_set.to_csv(test_file_path,index=False)
+
+            data_ingestion_artifact = DataIngestionArtifact(train_file_path=train_file_path,
+            test_file_path=test_file_path,
+            is_ingested=True,
+            message="Data ingestion completed successfully.")
+            logging.info(f"Data ingestion artifact: [{data_ingestion_artifact}]")
+            return data_ingestion_artifact
+        except Exception as e:
+            raise MushroomException(e,sys) from e
+    def initiate_data_ingestion(self)->DataIngestionArtifact:
+        try:
+           tgz_file_path = self.download_mushroom_data()
+
+           self.extract_tgz_file(tgz_file_path=tgz_file_path,archives=self.data_ingestion_config.raw_data_dir)
+
+           return self.split_data_as_train_test()
+
+        except Exception as e:
+            raise MushroomException(e,sys) from e
+        
+    # Deleted the garbage collected objects
+    def __del__(self):
+        logging.info(f"{'>>'*20}Data Ingestion log completed.{'<<'*20} \n\n")

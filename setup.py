@@ -14,7 +14,7 @@ def get_requirements_list() -> List[str]:
 
 # Declaring Variables for setup functions
 PROJECT_NAME = "Mushroom_Classifiaction"
-VERSION = "0.0.6"
+VERSION = "0.0.7"
 AUTHOR = "PRODIP SARKAR"
 DESCRIPTION = "MUSHROOM CLASSIFICATION"
 PACKAGES = ["mushroom"]
