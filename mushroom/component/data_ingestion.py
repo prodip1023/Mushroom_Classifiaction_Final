@@ -40,9 +40,6 @@ class DataIngestion:
             # download file
             request.urlretrieve(download_url,tgz_file_path)
 
-            # with urlopen(download_url) as in_stream, open(tgz_file_path, 'wb') as out_file:
-            #     copyfileobj(in_stream,out_file)
-
             logging.info(f"File :[{tgz_file_path}] has been downloaded successfully.")
 
             return tgz_file_path
