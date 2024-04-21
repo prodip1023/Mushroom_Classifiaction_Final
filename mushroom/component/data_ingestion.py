@@ -5,6 +5,7 @@ from mushroom.entity.artifact_entity import DataIngestionArtifact
 from mushroom.config.configuration import Configuration 
 import sys,os
 import zipfile
+from zipfile import BadZipFile
 import urllib.request as request
 from urllib.error import HTTPError
 
@@ -67,9 +68,13 @@ class DataIngestion:
 
             logging.info(f"Extracting tgz file:[{tgz_file_path}] into dir:[{raw_data_dir}]")
             # extracting zip file
-            with zipfile.ZipFile(tgz_file_path,'r') as tgz_file_obj:
-                tgz_file_obj.extractall(raw_data_dir)
-           
+            try:
+                with zipfile.ZipFile(tgz_file_path,'r') as tgz_file_obj:
+                    tgz_file_obj.extractall(raw_data_dir)
+            except BadZipFile :
+                print("The downloaded file is not a valid zip file.")
+                os.remove(tgz_file_path)
+                exit()
 
             logging.info(f"Extraction completed")
 
