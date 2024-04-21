@@ -5,10 +5,10 @@ from mushroom.entity.artifact_entity import DataIngestionArtifact
 from mushroom.entity.config_entity import DataIngestionConfig
 from mushroom.component.data_ingestion import DataIngestion
 
-import sys, os
+import sys,os
 
 class Pipeline:
-    def __init__(self, config: Configuration=Configuration()):
+    def __init__(self, config: Configuration=Configuration()) -> None:
         try:
             self.config = config
         except Exception as e:
