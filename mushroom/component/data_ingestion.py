@@ -6,6 +6,8 @@ from mushroom.config.configuration import Configuration
 import sys,os
 import zipfile
 import urllib.request as request
+from urllib.error import HTTPError
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -36,9 +38,17 @@ class DataIngestion:
 
             logging.info(f"Downloaded file from :[{download_url}] into : [{tgz_file_path}]")
 
-
+            try:
             # download file
-            request.urlretrieve(download_url,tgz_file_path)
+                request.urlretrieve(download_url,tgz_file_path)
+            except HTTPError as e:
+               if e.code == 404:
+                    print("File not found. URL:", download_url)
+                    # Handle the 404 error gracefully
+               else:
+                    print("An error occurred while downloading the file:", e)
+                # Exit the script or handle the error as needed
+               exit()
 
             logging.info(f"File :[{tgz_file_path}] has been downloaded successfully.")
 
