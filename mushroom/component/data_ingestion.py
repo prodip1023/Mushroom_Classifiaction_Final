@@ -5,9 +5,7 @@ from mushroom.entity.artifact_entity import DataIngestionArtifact
 from mushroom.config.configuration import Configuration 
 import sys,os
 import zipfile
-from zipfile import BadZipFile
-import urllib.request as request
-from urllib.error import HTTPError
+import gdown
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -39,17 +37,14 @@ class DataIngestion:
 
             logging.info(f"Downloaded file from :[{download_url}] into : [{tgz_file_path}]")
 
-            try:
-            # download file
-                request.urlretrieve(download_url,tgz_file_path)
-            except HTTPError as e:
-               if e.code == 404:
-                    print("File not found. URL:", download_url)
-                    # Handle the 404 error gracefully
-               else:
-                    print("An error occurred while downloading the file:", e)
-                # Exit the script or handle the error as needed
-               exit()
+            # Download File
+            
+            file_id = download_url.split("/")[-2]
+            prefix = 'https://drive.google.com/uc?/export=download&id='
+            gdown.download(prefix+file_id,tgz_file_path)
+
+            #gdown.download(download_url, tgz_file_path, quiet=False)
+            
 
             logging.info(f"File :[{tgz_file_path}] has been downloaded successfully.")
 
@@ -68,13 +63,9 @@ class DataIngestion:
 
             logging.info(f"Extracting tgz file:[{tgz_file_path}] into dir:[{raw_data_dir}]")
             # extracting zip file
-            try:
-                with zipfile.ZipFile(tgz_file_path,'r') as tgz_file_obj:
-                    tgz_file_obj.extractall(raw_data_dir)
-            except BadZipFile :
-                print("The downloaded file is not a valid zip file.")
-                os.remove(tgz_file_path)
-                exit()
+            with zipfile.ZipFile(tgz_file_path,'r') as tgz_file_obj:
+                tgz_file_obj.extractall(path=raw_data_dir)
+
 
             logging.info(f"Extraction completed")
 

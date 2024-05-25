@@ -3,9 +3,15 @@ Flask
 gunicorn
 pandas
 numpy
+matplotlib
 scikit-learn
 ipykernel
 PyYAML
 xtarfile 
+seaborn
+xgboost
+plotly
+nbformat>=4.2.0
+gdown
 
--e .
+- e .
